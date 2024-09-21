@@ -54,7 +54,7 @@ void SelectedMarker::setSelectMode(const SelectMode mode)
         this->_picker->setRubberBand(QwtPicker::NoRubberBand);
         this->_picker->setStateMachine(nullptr);
         this->_marker->setSymbol(nullptr);
-        this->_marker->setVisible(false);
+        this->_marker->hide();
         break;
 
     case SelectMode::PointSelect:
@@ -94,15 +94,15 @@ void SelectedMarker::setSelectMode(const SelectMode mode)
         break;
     }
 
-    this->_marker->setVisible(false);
-    this->_selectedRectangle->setVisible(false);
-    this->_shadedArea->setVisible(false);
+    this->_marker->hide();
+    this->_selectedRectangle->hide();
+    this->_shadedArea->hide();
 }
 
 void SelectedMarker::clickPoint(const QPointF &pos)
 {
     this->_marker->setValue(pos.x(), pos.y());
-    this->_marker->setVisible(true);
+    this->_marker->show();
     this->_parent->replot();
 }
 
@@ -118,7 +118,7 @@ void SelectedMarker::dragRectangle(const QRectF &rect)
     outter.addRect(_parent->canvas()->rect());
     this->_shadedArea->setShape(outter.subtracted(inner));
 
-    this->_selectedRectangle->setVisible(true);
-    this->_shadedArea->setVisible(true);
+    this->_selectedRectangle->show();
+    this->_shadedArea->show();
     this->_parent->replot();
 }

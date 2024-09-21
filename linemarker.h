@@ -2,7 +2,7 @@
 
 #include <QwtPlotMarker>
 
-class LineMarker : private QwtPlotMarker
+class LineMarker : public QwtPlotMarker
 {
 
 public:

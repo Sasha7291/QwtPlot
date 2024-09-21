@@ -13,16 +13,17 @@ int main( int argc, char* argv[] ) {
             values[y][x] = x + y;
 
     Plot p(&wnd);
-    p.setParameters(
+    p.start();
+    p.setParameters({
         0.0,
         0.0,
         100.0,
         100.0,
         100,
         100,
-        "x",
-        "y"
-    );
+        QString("x"),
+        QString("y")
+    });
 
     for (int y = 0; y < 100; ++y)
         p.addData(values[y]);

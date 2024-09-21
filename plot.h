@@ -7,6 +7,8 @@
 
 #include <QwtPlot>
 
+#include <any>
+
 class SelectedMarker;
 class Spectrogram;
 
@@ -24,19 +26,28 @@ public:
     Plot &operator=(Plot&&) = delete;
 
     void addData(const std::vector<double> &data);
-    void setParameters(
-        const double xOrigin,
-        const double yOrigin,
-        const double xRange,
-        const double yRange,
-        const unsigned int xSamples,
-        const unsigned int ySamples,
-        const QString &xAxisName,
-        const QString &yAxisName
-    );
+    void setData(QVector<double> &&data, const unsigned int nColumns);
+    /* Последовательность параметров:
+     * 0. xOrigin
+     * 1. yOrigin
+     * 2. xRange
+     * 3. yRange
+     * 4. xSamples
+     * 5. ySamples
+     * 6. xAxisName
+     * 7. yAxisName
+     */
+    void setParameters(const std::vector<std::any> &parameters);
+    void start();
 
 private:
-    std::unique_ptr<Spectrogram> _spectrogram;
+    void addCounter();
+    void calculateCurrentY();
+    bool isEdgeReached();
+    void swapBuffers();
+
+    std::unique_ptr<Spectrogram> _primarySpectrogram;
+    std::unique_ptr<Spectrogram> _secondarySpectrogram;
     std::unique_ptr<LineCurve> _lineCurve;
     std::unique_ptr<SelectedMarker> _selectedMarker;
     std::unique_ptr<LineMarker> _lineMarker;
@@ -53,5 +64,6 @@ private:
     double _yAxisOrigin;
     double _yAxisRange;
     unsigned int _ySamples;
+    bool _forward;
 
 };

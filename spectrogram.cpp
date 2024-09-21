@@ -23,7 +23,7 @@ Spectrogram::Spectrogram(QwtPlot *parent)
 
     this->_data->setResampleMode(QwtMatrixRasterData::ResampleMode::BilinearInterpolation);
     this->_data->setAttribute(QwtRasterData::WithoutGaps, true);
-    this->setData(this->_data.get());
+    QwtPlotSpectrogram::setData(this->_data.get());
 }
 
 void Spectrogram::addData(
@@ -37,6 +37,50 @@ void Spectrogram::addData(
         this->_rowData->push_back(value);
 
     this->_data->setValueMatrix(*this->_rowData, data.size());
+    this->rescale(xRange, yRange);
+}
+
+double Spectrogram::maxZ() const
+{
+    return this->_data->interval(Qt::ZAxis).maxValue();
+}
+
+double Spectrogram::minZ() const
+{
+    return this->_data->interval(Qt::ZAxis).minValue();
+}
+
+void Spectrogram::reset()
+{
+    this->_rowData->clear();
+    this->_data.release();
+    this->_data = std::make_unique<QwtMatrixRasterData>();
+    QwtPlotSpectrogram::setData(this->_data.get());
+}
+
+void Spectrogram::setData(
+    QVector<double> &&data,
+    const unsigned int nColumns,
+    const std::pair<double, double> &xRange,
+    const std::pair<double, double> &yRange
+)
+{
+    this->_rowData.release();
+    this->_rowData = std::make_unique<QVector<double>>(std::move(data));
+    this->_data->setValueMatrix(*this->_rowData, nColumns);
+    this->rescale(xRange, yRange);
+}
+
+QwtInterval Spectrogram::zInterval() const
+{
+    return this->_data->interval(Qt::ZAxis);
+}
+
+void Spectrogram::rescale(
+    const std::pair<double, double> &xRange,
+    const std::pair<double, double> &yRange
+)
+{
     this->_data->setInterval(
         Qt::XAxis,
         QwtInterval(xRange.first, xRange.second)
@@ -55,27 +99,4 @@ void Spectrogram::addData(
 
     _parent->setAxisScale(QwtAxis::YRight, this->minZ(), this->maxZ());
     _parent->axisWidget(QwtAxis::YRight)->setColorMap(this->zInterval(), this->_colorMap.get());
-}
-
-double Spectrogram::maxZ() const
-{
-    return this->_data->interval(Qt::ZAxis).maxValue();
-}
-
-double Spectrogram::minZ() const
-{
-    return this->_data->interval(Qt::ZAxis).minValue();
-}
-
-void Spectrogram::reset()
-{
-    this->_rowData->clear();
-    this->_data.release();
-    this->_data = std::make_unique<QwtMatrixRasterData>();
-    this->setData(this->_data.get());
-}
-
-QwtInterval Spectrogram::zInterval() const
-{
-    return this->_data->interval(Qt::ZAxis);
 }
