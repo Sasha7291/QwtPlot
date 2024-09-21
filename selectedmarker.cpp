@@ -1,5 +1,6 @@
 #include "selectedmarker.h"
 
+#include <QPainterPath>
 #include <QwtPickerMachine>
 #include <QwtPlot>
 
@@ -12,25 +13,37 @@ SelectedMarker::SelectedMarker(QwtPlot *parent)
         QwtPicker::ActiveOnly,
         parent->canvas())
     )
-    , _pointSelect(nullptr)
-    , _rectSelect(nullptr)
-    , _symbol(nullptr)
-    , _parent(parent)
     , _marker(std::make_unique<QwtPlotMarker>())
+    , _symbol(nullptr)
+    , _selectedRectangle(std::make_unique<QwtPlotShapeItem>())
+    , _shadedArea(std::make_unique<QwtPlotShapeItem>())
+    , _pointClickStateMachine(nullptr)
+    , _rectangleDragStateMachine(nullptr)
+    , _parent(parent)
 {
     this->_picker->setRubberBandPen(QPen(Qt::gray, 1.5, Qt::DotLine, Qt::RoundCap, Qt::RoundJoin));
-    this->_marker->setLinePen(QPen(Qt::black, 1.5, Qt::DashDotLine, Qt::RoundCap, Qt::RoundJoin));
+
+    this->_marker->setLinePen(QPen(Qt::red, 1, Qt::DashDotLine, Qt::RoundCap, Qt::RoundJoin));
     this->_marker->attach(parent);
 
-    this->setSelectMode(SelectMode::NoSelect);
+    this->_selectedRectangle->setBrush(QBrush(Qt::NoBrush));
+    this->_selectedRectangle->setPen(QPen(Qt::red, 1, Qt::DashLine, Qt::RoundCap, Qt::RoundJoin));
+    this->_selectedRectangle->attach(parent);
 
-    connect(this->_picker.get(), SIGNAL(selected(const QPointF&)), this, SLOT(moveMarker(const QPointF&)));
+    this->_shadedArea->setBrush(QBrush(QColor(128, 128, 128, 64), Qt::SolidPattern));
+    this->_shadedArea->setPen(QPen(Qt::NoPen));
+    this->_shadedArea->attach(parent);
+
+    this->setSelectMode(SelectMode::HLineSelect);
+
+    connect(this->_picker.get(), SIGNAL(selected(const QPointF&)), this, SLOT(clickPoint(const QPointF&)));
+    connect(this->_picker.get(), SIGNAL(selected(const QRectF&)), this, SLOT(dragRectangle(const QRectF&)));
 }
 
 SelectedMarker::~SelectedMarker()
 {
-    delete _pointSelect;
-    delete _rectSelect;
+    delete _pointClickStateMachine;
+    delete _rectangleDragStateMachine;
 }
 
 void SelectedMarker::setSelectMode(const SelectMode mode)
@@ -45,9 +58,9 @@ void SelectedMarker::setSelectMode(const SelectMode mode)
         break;
 
     case SelectMode::PointSelect:
-        if (this->_pointSelect == nullptr)
-            this->_pointSelect = new QwtPickerDragPointMachine;
-        this->_picker->setStateMachine(this->_pointSelect);
+        if (this->_pointClickStateMachine == nullptr)
+            this->_pointClickStateMachine = new QwtPickerClickPointMachine;
+        this->_picker->setStateMachine(this->_pointClickStateMachine);
         this->_picker->setRubberBand(QwtPicker::NoRubberBand);
         if (this->_symbol == nullptr)
             this->_symbol = std::make_unique<QwtSymbol>(QwtSymbol::Cross, Qt::red, QPen(Qt::red), QSize(10, 10));
@@ -55,36 +68,57 @@ void SelectedMarker::setSelectMode(const SelectMode mode)
         break;
 
     case SelectMode::HLineSelect:
-        this->_picker->setRubberBand(QwtPicker::NoRubberBand);
-        this->_picker->setStateMachine(nullptr);
+        if (this->_pointClickStateMachine == nullptr)
+            this->_pointClickStateMachine = new QwtPickerClickPointMachine;
+        this->_picker->setStateMachine(this->_pointClickStateMachine);
         this->_picker->setRubberBand(QwtPicker::NoRubberBand);
         this->_marker->setSymbol(nullptr);
         this->_marker->setLineStyle(QwtPlotMarker::HLine);
         break;
 
     case SelectMode::VLineSelect:
-        this->_picker->setRubberBand(QwtPicker::NoRubberBand);
-        this->_picker->setStateMachine(nullptr);
+        if (this->_pointClickStateMachine == nullptr)
+            this->_pointClickStateMachine = new QwtPickerClickPointMachine;
+        this->_picker->setStateMachine(this->_pointClickStateMachine);
         this->_picker->setRubberBand(QwtPicker::NoRubberBand);
         this->_marker->setSymbol(nullptr);
         this->_marker->setLineStyle(QwtPlotMarker::VLine);
         break;
 
     case SelectMode::RectSelect:
-        if (this->_rectSelect == nullptr)
-            this->_rectSelect = new QwtPickerDragRectMachine;
-        this->_picker->setStateMachine(this->_rectSelect);
+        if (this->_rectangleDragStateMachine == nullptr)
+            this->_rectangleDragStateMachine = new QwtPickerDragRectMachine;
+        this->_picker->setStateMachine(this->_rectangleDragStateMachine);
         this->_picker->setRubberBand(QwtPicker::RectRubberBand);
         this->_marker->setSymbol(nullptr);
         break;
     }
 
     this->_marker->setVisible(false);
+    this->_selectedRectangle->setVisible(false);
+    this->_shadedArea->setVisible(false);
 }
 
-void SelectedMarker::selectPoint(const QPointF &pos)
+void SelectedMarker::clickPoint(const QPointF &pos)
 {
-    this->_marker->setVisible(true);
     this->_marker->setValue(pos.x(), pos.y());
+    this->_marker->setVisible(true);
+    this->_parent->replot();
+}
+
+void SelectedMarker::dragRectangle(const QRectF &rect)
+{
+    // рисуем выделенный прямоугольник
+    this->_selectedRectangle->setRect(rect);
+
+    // затеняем область вне выделенного прямоугольника
+    QPainterPath inner;
+    QPainterPath outter;
+    inner.addRect(rect);
+    outter.addRect(_parent->canvas()->rect());
+    this->_shadedArea->setShape(outter.subtracted(inner));
+
+    this->_selectedRectangle->setVisible(true);
+    this->_shadedArea->setVisible(true);
     this->_parent->replot();
 }

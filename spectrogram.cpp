@@ -2,19 +2,27 @@
 
 #include <QVector>
 #include <QwtInterval>
+#include <QwtPlot>
+#include <QwtScaleWidget>
 
 Spectrogram::Spectrogram(QwtPlot *parent)
     : QwtPlotSpectrogram()
     , _rowData(std::make_unique<QVector<double>>())
     , _data(std::make_unique<QwtMatrixRasterData>())
+    , _colorMap(std::make_unique<ColorMap>())
+    , _parent(parent)
 {
     this->setCachePolicy(QwtPlotRasterItem::CachePolicy::PaintCache);
-    this->setDisplayMode(QwtPlotSpectrogram::DisplayMode::ContourMode, true);
+    this->setDisplayMode(QwtPlotSpectrogram::DisplayMode::ImageMode, true);
+    this->setColorMap(this->_colorMap.get());
     this->attach(parent);
+
+    _parent->axisWidget(QwtAxis::YRight)->setTitle("z");
+    _parent->axisWidget(QwtAxis::YRight)->setColorBarEnabled(true);
+    _parent->setAxisVisible(QwtAxis::YRight);
 
     this->_data->setResampleMode(QwtMatrixRasterData::ResampleMode::BilinearInterpolation);
     this->_data->setAttribute(QwtRasterData::WithoutGaps, true);
-
     this->setData(this->_data.get());
 }
 
@@ -44,6 +52,19 @@ void Spectrogram::addData(
             *std::max_element(this->_rowData->begin(), this->_rowData->end())
         )
     );
+
+    _parent->setAxisScale(QwtAxis::YRight, this->minZ(), this->maxZ());
+    _parent->axisWidget(QwtAxis::YRight)->setColorMap(this->zInterval(), this->_colorMap.get());
+}
+
+double Spectrogram::maxZ() const
+{
+    return this->_data->interval(Qt::ZAxis).maxValue();
+}
+
+double Spectrogram::minZ() const
+{
+    return this->_data->interval(Qt::ZAxis).minValue();
 }
 
 void Spectrogram::reset()
@@ -52,4 +73,9 @@ void Spectrogram::reset()
     this->_data.release();
     this->_data = std::make_unique<QwtMatrixRasterData>();
     this->setData(this->_data.get());
+}
+
+QwtInterval Spectrogram::zInterval() const
+{
+    return this->_data->interval(Qt::ZAxis);
 }

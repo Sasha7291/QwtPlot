@@ -1,9 +1,11 @@
 #pragma once
 
+#include "colormap.h"
+
 #include <QwtMatrixRasterData>
 #include <QwtPlotSpectrogram>
 
-class Spectrogram : public QwtPlotSpectrogram
+class Spectrogram : protected QwtPlotSpectrogram
 {
 
 public:
@@ -15,10 +17,15 @@ public:
         const std::pair<double, double> &xRange,
         const std::pair<double, double> &yRange
     );
+    [[nodiscard]] double maxZ() const;
+    [[nodiscard]] double minZ() const;
     void reset();
+    [[nodiscard]] QwtInterval zInterval() const;
 
 private:
     std::unique_ptr<QVector<double>> _rowData;
     std::unique_ptr<QwtMatrixRasterData> _data;
+    std::unique_ptr<ColorMap> _colorMap;
+    QwtPlot *_parent;
 
 };

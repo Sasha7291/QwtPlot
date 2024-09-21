@@ -1,11 +1,11 @@
 #pragma once
 
+#include "linecurve.h"
+#include "linemarker.h"
 #include "selectedmarker.h"
 #include "spectrogram.h"
 
 #include <QwtPlot>
-#include <QwtPlotCurve>
-#include <QwtPlotMarker>
 
 class SelectedMarker;
 class Spectrogram;
@@ -37,9 +37,9 @@ public:
 
 private:
     std::unique_ptr<Spectrogram> _spectrogram;
-    std::unique_ptr<QwtPlotCurve> _curve;
+    std::unique_ptr<LineCurve> _lineCurve;
     std::unique_ptr<SelectedMarker> _selectedMarker;
-    std::unique_ptr<QwtPlotMarker> _lineMarker;
+    std::unique_ptr<LineMarker> _lineMarker;
 
     unsigned int _pointCounter;
     unsigned int _lineCounter;

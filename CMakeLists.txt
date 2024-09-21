@@ -25,6 +25,9 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         plot.h plot.cpp
         selectedmarker.h selectedmarker.cpp
         spectrogram.h spectrogram.cpp
+        linemarker.h linemarker.cpp
+        colormap.h colormap.cpp
+        linecurve.h linecurve.cpp
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET QwtPlot APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR

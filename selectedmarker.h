@@ -2,6 +2,7 @@
 
 #include <QwtPlotMarker>
 #include <QwtPlotPicker>
+#include <QwtPlotShapeItem>
 #include <QwtSymbol>
 
 class SelectedMarker : public QObject
@@ -24,14 +25,17 @@ public:
     void setSelectMode(const SelectMode mode);
 
 private slots:
-    void selectPoint(const QPointF &pos);
+    void clickPoint(const QPointF &pos);
+    void dragRectangle(const QRectF &rect);
 
 private:
     std::unique_ptr<QwtPlotPicker> _picker;
     std::unique_ptr<QwtPlotMarker> _marker;
+    std::unique_ptr<QwtPlotShapeItem> _selectedRectangle;
+    std::unique_ptr<QwtPlotShapeItem> _shadedArea;
     std::unique_ptr<QwtSymbol> _symbol;
     QwtPlot *_parent;
-    QwtPickerMachine *_pointSelect;
-    QwtPickerMachine *_rectSelect;
+    QwtPickerMachine *_pointClickStateMachine;
+    QwtPickerMachine *_rectangleDragStateMachine;
 
 };

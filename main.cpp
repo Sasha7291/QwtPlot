@@ -24,7 +24,7 @@ int main( int argc, char* argv[] ) {
         "y"
     );
 
-    for (int y = 0; y < 50; ++y)
+    for (int y = 0; y < 100; ++y)
         p.addData(values[y]);
 
     wnd.setCentralWidget(&p);
