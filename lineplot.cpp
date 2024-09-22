@@ -1,10 +1,10 @@
-#include "plot.h"
+#include "lineplot.h"
 
 #include <QwtInterval>
 #include <QwtLinearColorMap>
 #include <QwtSymbol>
 
-Plot::Plot(QWidget *parent)
+LinePlot::LinePlot(QWidget *parent)
     : QwtPlot(parent)
     , _primarySpectrogram(nullptr)
     , _secondarySpectrogram(nullptr)
@@ -29,7 +29,7 @@ Plot::Plot(QWidget *parent)
     this->setAutoDelete(false);
 }
 
-void Plot::addData(const std::vector<double> &data)
+void LinePlot::addData(const std::vector<double> &data)
 {
     this->calculateCurrentY();
 
@@ -54,7 +54,7 @@ void Plot::addData(const std::vector<double> &data)
     }
 }
 
-void Plot::setData(QVector<double> &&data, const unsigned int nColumns)
+void LinePlot::setData(QVector<double> &&data, const unsigned int nColumns)
 {
     this->_primarySpectrogram->setData(
         std::move(data),
@@ -68,7 +68,7 @@ void Plot::setData(QVector<double> &&data, const unsigned int nColumns)
     this->replot();
 }
 
-void Plot::setParameters(const std::unordered_map<Parameters, std::any> &parameters)
+void LinePlot::setParameters(const std::unordered_map<unsigned int, std::any> &parameters)
 {
     this->setAxisScale(
         this->xBottom,
@@ -98,7 +98,7 @@ void Plot::setParameters(const std::unordered_map<Parameters, std::any> &paramet
     this->replot();
 }
 
-void Plot::start()
+void LinePlot::start()
 {
     this->_lineCounter = 1;
     this->_pointCounter = 1;
@@ -107,12 +107,12 @@ void Plot::start()
     this->swapBuffers();
 }
 
-void Plot::addCounter()
+void LinePlot::addCounter()
 {
     (this->_forward) ? (++this->_lineCounter) : (--this->_lineCounter);
 }
 
-void Plot::calculateCurrentY()
+void LinePlot::calculateCurrentY()
 {
     if (this->_forward)
         this->_yAxisCurrent = this->_yAxisOrigin + this->_lineCounter * this->_yAxisRange / this->_ySamples;
@@ -120,15 +120,14 @@ void Plot::calculateCurrentY()
         this->_yAxisCurrent = this->_yAxisEnd - this->_lineCounter * this->_yAxisRange / this->_ySamples;
 }
 
-bool Plot::isEdgeReached()
+bool LinePlot::isEdgeReached()
 {
     return this->_lineCounter == this->_ySamples + 1 && this->_forward
            || this->_lineCounter == 1 && !this->_forward;
 }
 
-void Plot::swapBuffers()
+void LinePlot::swapBuffers()
 {
-    qDebug() << "swap";
     std::swap(this->_primarySpectrogram, this->_secondarySpectrogram);
     if (this->_primarySpectrogram == nullptr)
         this->_primarySpectrogram = std::make_unique<Spectrogram>(this);

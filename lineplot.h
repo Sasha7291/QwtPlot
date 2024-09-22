@@ -2,6 +2,7 @@
 
 #include "linecurve.h"
 #include "linemarker.h"
+#include "macroses.h"
 #include "selectedmarker.h"
 #include "spectrogram.h"
 
@@ -9,12 +10,12 @@
 
 #include <any>
 
-class Plot : public QwtPlot
+class LinePlot : public QwtPlot
 {
     Q_OBJECT
 
 public:
-    enum Parameters
+    enum Parameters : unsigned int
     {
         xOrigin,    // double
         yOrigin,    // double
@@ -26,17 +27,18 @@ public:
         yAxisName   // QString
     };
 
-    explicit Plot(QWidget *parent = nullptr);
-    Plot(const Plot&) = delete;
-    Plot(Plot&&) = delete;
-    ~Plot() = default;
+    explicit LinePlot(QWidget *parent = nullptr);
+    LinePlot(const LinePlot&) = delete;
+    LinePlot(LinePlot&&) = delete;
+    ~LinePlot() = default;
 
-    Plot &operator=(const Plot&) = delete;
-    Plot &operator=(Plot&&) = delete;
+    LinePlot &operator=(const LinePlot&) = delete;
+    LinePlot &operator=(LinePlot&&) = delete;
 
+    void addData(const std::vector<std::vector<double>> &data) UNUSED_FUNCTION
     void addData(const std::vector<double> &data);
     void setData(QVector<double> &&data, const unsigned int nColumns);
-    void setParameters(const std::unordered_map<Parameters, std::any> &parameters);
+    void setParameters(const std::unordered_map<unsigned int, std::any> &parameters);
     void start();
 
 private:
