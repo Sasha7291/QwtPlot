@@ -23,6 +23,7 @@ Plot::Plot(QWidget *parent)
     , _yAxisOrigin(0.0)
     , _yAxisRange(100.0)
     , _ySamples(100)
+    , _forward(true)
 {
     this->setAxisAutoScale(Qt::YAxis, true);
     this->setAutoDelete(false);
@@ -35,7 +36,10 @@ void Plot::addData(const std::vector<double> &data)
     this->_primarySpectrogram->addData(
         data,
         { this->_xAxisOrigin, this->_xAxisEnd },
-        { this->_yAxisOrigin, this->_yAxisCurrent }
+        {
+            this->_forward ? this->_yAxisOrigin : this->_yAxisCurrent,
+            this->_forward ? this->_yAxisCurrent : this->_yAxisEnd
+        }
     );
     this->_lineMarker->setLineCoord(this->_yAxisCurrent);
     this->_lineCurve->setLineData(data, this->_lineCounter);
@@ -64,33 +68,33 @@ void Plot::setData(QVector<double> &&data, const unsigned int nColumns)
     this->replot();
 }
 
-void Plot::setParameters(const std::vector<std::any> &parameters)
+void Plot::setParameters(const std::unordered_map<Parameters, std::any> &parameters)
 {
     this->setAxisScale(
         this->xBottom,
-        std::any_cast<double>(parameters[0]),
-        std::any_cast<double>(parameters[0]) + std::any_cast<double>(parameters[2])
+        std::any_cast<double>(parameters.at(xOrigin)),
+        std::any_cast<double>(parameters.at(xOrigin)) + std::any_cast<double>(parameters.at(xRange))
     );
     this->setAxisScale(
         this->yLeft,
-        std::any_cast<double>(parameters[1]),
-        std::any_cast<double>(parameters[1]) + std::any_cast<double>(parameters[3])
+        std::any_cast<double>(parameters.at(yOrigin)),
+        std::any_cast<double>(parameters.at(yOrigin)) + std::any_cast<double>(parameters.at(yRange))
     );
-    this->_xAxisEnd = std::any_cast<double>(parameters[0]) + std::any_cast<double>(parameters[2]);
-    this->_xAxisOrigin = std::any_cast<double>(parameters[0]);
-    this->_xAxisRange = std::any_cast<double>(parameters[2]);
-    this->_xSamples = std::any_cast<int>(parameters[4]);
-    this->_yAxisEnd = std::any_cast<double>(parameters[1]) + std::any_cast<double>(parameters[3]);
-    this->_yAxisOrigin = std::any_cast<double>(parameters[1]);
-    this->_yAxisRange = std::any_cast<double>(parameters[3]);
-    this->_ySamples = std::any_cast<int>(parameters[5]);
+    this->_xAxisEnd = std::any_cast<double>(parameters.at(xOrigin)) + std::any_cast<double>(parameters.at(xRange));
+    this->_xAxisOrigin = std::any_cast<double>(parameters.at(xOrigin));
+    this->_xAxisRange = std::any_cast<double>(parameters.at(xRange));
+    this->_xSamples = std::any_cast<unsigned int>(parameters.at(xSamples));
+    this->_yAxisEnd = std::any_cast<double>(parameters.at(yOrigin)) + std::any_cast<double>(parameters.at(yRange));
+    this->_yAxisOrigin = std::any_cast<double>(parameters.at(yOrigin));
+    this->_yAxisRange = std::any_cast<double>(parameters.at(yRange));
+    this->_ySamples = std::any_cast<unsigned int>(parameters.at(ySamples));
     this->_lineCurve->setParameters(
-        std::any_cast<double>(parameters[1]) + std::any_cast<double>(parameters[3]),
-        std::any_cast<double>(parameters[1]),
-        std::any_cast<int>(parameters[5])
+        std::any_cast<double>(parameters.at(yOrigin)) + std::any_cast<double>(parameters.at(yRange)),
+        std::any_cast<double>(parameters.at(yOrigin)),
+        std::any_cast<unsigned int>(parameters.at(ySamples))
     );
-    this->setAxisTitle(this->xBottom, std::any_cast<QString>(parameters[6]));
-    this->setAxisTitle(this->yLeft, std::any_cast<QString>(parameters[7]));
+    this->setAxisTitle(this->xBottom, std::any_cast<QString>(parameters.at(xAxisName)));
+    this->setAxisTitle(this->yLeft, std::any_cast<QString>(parameters.at(yAxisName)));
     this->replot();
 }
 
@@ -98,6 +102,7 @@ void Plot::start()
 {
     this->_lineCounter = 1;
     this->_pointCounter = 1;
+    this->_forward = true;
 
     this->swapBuffers();
 }
@@ -109,7 +114,10 @@ void Plot::addCounter()
 
 void Plot::calculateCurrentY()
 {
-    this->_yAxisCurrent = this->_yAxisOrigin + this->_lineCounter * this->_yAxisRange / this->_ySamples;
+    if (this->_forward)
+        this->_yAxisCurrent = this->_yAxisOrigin + this->_lineCounter * this->_yAxisRange / this->_ySamples;
+    else
+        this->_yAxisCurrent = this->_yAxisEnd - this->_lineCounter * this->_yAxisRange / this->_ySamples;
 }
 
 bool Plot::isEdgeReached()
@@ -120,6 +128,7 @@ bool Plot::isEdgeReached()
 
 void Plot::swapBuffers()
 {
+    qDebug() << "swap";
     std::swap(this->_primarySpectrogram, this->_secondarySpectrogram);
     if (this->_primarySpectrogram == nullptr)
         this->_primarySpectrogram = std::make_unique<Spectrogram>(this);

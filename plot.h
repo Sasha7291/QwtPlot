@@ -9,14 +9,23 @@
 
 #include <any>
 
-class SelectedMarker;
-class Spectrogram;
-
 class Plot : public QwtPlot
 {
     Q_OBJECT
 
 public:
+    enum Parameters
+    {
+        xOrigin,    // double
+        yOrigin,    // double
+        xRange,     // double
+        yRange,     // double
+        xSamples,   // unsigned int
+        ySamples,   // unsigned int
+        xAxisName,  // QString
+        yAxisName   // QString
+    };
+
     explicit Plot(QWidget *parent = nullptr);
     Plot(const Plot&) = delete;
     Plot(Plot&&) = delete;
@@ -27,17 +36,7 @@ public:
 
     void addData(const std::vector<double> &data);
     void setData(QVector<double> &&data, const unsigned int nColumns);
-    /* Последовательность параметров:
-     * 0. xOrigin
-     * 1. yOrigin
-     * 2. xRange
-     * 3. yRange
-     * 4. xSamples
-     * 5. ySamples
-     * 6. xAxisName
-     * 7. yAxisName
-     */
-    void setParameters(const std::vector<std::any> &parameters);
+    void setParameters(const std::unordered_map<Parameters, std::any> &parameters);
     void start();
 
 private:

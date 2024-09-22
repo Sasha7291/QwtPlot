@@ -15,14 +15,14 @@ int main( int argc, char* argv[] ) {
     Plot p(&wnd);
     p.start();
     p.setParameters({
-        0.0,
-        0.0,
-        100.0,
-        100.0,
-        100,
-        100,
-        QString("x"),
-        QString("y")
+        { Plot::xOrigin, 0.0 },
+        { Plot::yOrigin, 0.0 },
+        { Plot::xRange, 100.0 },
+        { Plot::yRange, 100.0 },
+        { Plot::xSamples, 100u },
+        { Plot::ySamples, 100u },
+        { Plot::xAxisName, QString("x") },
+        { Plot::yAxisName, QString("y") }
     });
 
     for (int y = 0; y < 100; ++y)
