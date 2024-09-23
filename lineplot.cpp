@@ -2,6 +2,7 @@
 
 #include <QwtInterval>
 #include <QwtLinearColorMap>
+#include <QwtPlotLayout>
 #include <QwtSymbol>
 
 LinePlot::LinePlot(QWidget *parent)
@@ -25,8 +26,12 @@ LinePlot::LinePlot(QWidget *parent)
     , _ySamples(100)
     , _forward(true)
 {
+    this->plotLayout()->setAlignCanvasToScales(true);
     this->setAxisAutoScale(Qt::YAxis, true);
     this->setAutoDelete(false);
+    this->setAxisFont(this->xBottom, QFont("Bahnschrift"));
+    this->setAxisFont(this->yLeft, QFont("Bahnschrift"));
+    this->setAxisFont(Qt::YAxis, QFont("Bahnschrift"));
 }
 
 void LinePlot::addData(const std::vector<double> &data)

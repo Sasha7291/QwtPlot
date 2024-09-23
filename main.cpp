@@ -2,6 +2,7 @@
 #include <QMainWindow>
 
 #include "abstractplot.h"
+#include "lineplot.h"
 #include "monitorplot.h"
 
 int main( int argc, char* argv[] ) {
@@ -15,22 +16,20 @@ int main( int argc, char* argv[] ) {
 
     AbstractPlot<MonitorPlot> p(&wnd);
     // p.start();
-    // p.setParameters({
-    //     { LinePlot::xOrigin, 0.0 },
-    //     { LinePlot::yOrigin, 0.0 },
-    //     { LinePlot::xRange, 100.0 },
-    //     { LinePlot::yRange, 100.0 },
-    //     { LinePlot::xSamples, 100u },
-    //     { LinePlot::ySamples, 100u },
-    //     { LinePlot::xAxisName, QString("x") },
-    //     { LinePlot::yAxisName, QString("y") }
-    // });
+    p.setParameters({
+        { MonitorPlot::origin, 0.0 },
+        { MonitorPlot::end, 1.0 },
+        { MonitorPlot::end, 100u },
+        { MonitorPlot::xAxisName, QString("x") },
+        { MonitorPlot::yAxisName, QString("y") },
+        { MonitorPlot::curveNames, QStringList({"", ""})}
+    });
 
     for (int y = 0; y < 100; ++y)
         p.addData(values[y]);
 
     wnd.setCentralWidget(p.instance());
-    wnd.resize(400, 400);
+    wnd.resize(400, 200);
     wnd.show();
 
     return QApplication::exec();

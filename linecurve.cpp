@@ -10,6 +10,8 @@ LineCurve::LineCurve(QwtPlot *parent)
     , _samples(100)
 {
     this->setPen(QPen(Qt::red, 1.5, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+    this->setRenderHint(QwtPlotItem::RenderAntialiased, true);
+    this->setPaintAttribute(QwtPlotCurve::ClipPolygons, false);
     this->setStyle(QwtPlotCurve::Lines);
     this->attach(parent);
 }
